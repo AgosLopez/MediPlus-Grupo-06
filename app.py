@@ -1,9 +1,55 @@
 from dotenv import load_dotenv
+from neo4j import GraphDatabase
+from pymongo import MongoClient
 import os
 import redis
 from astrapy import DataAPIClient
 
 load_dotenv()
+
+
+# ==========================================
+# NEO4J AURA
+# ==========================================
+
+driver = GraphDatabase.driver(
+    os.getenv("NEO4J_URI"),
+    auth=(
+        os.getenv("NEO4J_USERNAME"),
+        os.getenv("NEO4J_PASSWORD")
+    )
+)
+
+driver.verify_connectivity()
+
+print("Conectado a Neo4j Aura")
+
+with driver.session(database=os.getenv("NEO4J_DATABASE")) as session:
+
+    resultado = session.run("""
+        MATCH (n)
+        RETURN count(n) AS total
+    """)
+
+    for fila in resultado:
+        print("Nodos:", fila["total"])
+
+
+# ==========================================
+# MONGODB
+# ==========================================
+
+mongo_client = MongoClient(os.getenv("MONGO_URI"))
+
+mongo_db = mongo_client["mediplus"]
+
+print("Conectado a MongoDB")
+
+# ver colecciones
+print("Colecciones MongoDB:")
+
+for c in mongo_db.list_collection_names():
+    print("-", c)
 
 # ==========================================
 # REDIS CLOUD
