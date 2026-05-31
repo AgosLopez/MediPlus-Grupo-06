@@ -6,9 +6,9 @@ load_dotenv()
 
 client = MongoClient(
     os.getenv("MONGO_URI"),
-    tlsAllowInvalidCertificates=True
+    tls=True,
+    tlsAllowInvalidCertificates=True,
+    tlsAllowInvalidHostnames=True
 )
 
-client.admin.command("ping")
-
-print("✅ Mongo conectado")
+print(client.admin.command("ping"))
