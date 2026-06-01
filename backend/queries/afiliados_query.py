@@ -34,7 +34,7 @@ def serializar(obj):
  
 def get_db():
     client = MongoClient(os.getenv("MONGO_URI"), serverSelectionTimeoutMS=5000)
-    return client["mediplus"]
+    return client["prepaga"]
  
  
 def listar_afiliados():
