@@ -7,6 +7,14 @@ from astrapy import DataAPIClient
 
 load_dotenv()
 
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+print("URI =", os.getenv("NEO4J_URI"))
+print("USER =", os.getenv("NEO4J_USER"))
+print("DATABASE =", os.getenv("NEO4J_DATABASE"))
 
 # ==========================================
 # NEO4J AURA
