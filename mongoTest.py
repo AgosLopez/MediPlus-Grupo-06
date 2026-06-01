@@ -53,9 +53,9 @@ try:
     q4 = afiliados_col.find({"plan_salud.codigo_plan": "BASICO"}).limit(LIMIT_TEST)
     for af in q4: print(f"   --> {af['apellido']} - Plan: {af['plan_salud']['nombre']}")
 
-    # 5. Filtro por rango numérico en campos embebidos (Cobertura mayor al 50%)
-    print("\n5. Buscar planes con cobertura de estudios superior al 50%:")
-    q5 = afiliados_col.find({"plan_salud.cobertura_estudios": {"$gt": 50}}).limit(LIMIT_TEST)
+    # 5. Filtro por rango numérico en campos embebidos (Cobertura mayor al 70%)
+    print("\n5. Buscar planes con cobertura de estudios superior al 7%:")
+    q5 = afiliados_col.find({"plan_salud.cobertura_estudios": {"$gt": 70}}).limit(LIMIT_TEST)
     for af in q5: print(f"   --> {af['apellido']} - Cobertura: {af['plan_salud']['cobertura_estudios']}%")
 
     # 6. Traer solo apellido, teléfono y ocultar el ID de sistema
@@ -69,14 +69,14 @@ try:
     for af in q7: print(f"   --> {af['apellido']} ({af['direccion']['ciudad']})")
 
     # 8. Búsqueda por grupo familiar
-    print("\n8. Buscar integrantes asociados al grupo familiar 'FAM-0052':")
-    q8 = afiliados_col.find({"grupo_familiar_id": "FAM-0052"}).limit(LIMIT_TEST)
+    print("\n8. Buscar integrantes asociados al grupo familiar 'FAM-0053':")
+    q8 = afiliados_col.find({"grupo_familiar_id": "FAM-0053"}).limit(LIMIT_TEST)
     for af in q8: print(f"   --> {af['apellido']}, {af['nombre']} | Rol: {af['rol_familiar']}")
 
-    # 9. Gente que tiene cargado un médico de cabecera
-    print("\n9. Buscar afiliados con médico de cabecera asignado:")
-    q9 = afiliados_col.find({"medico_cabecera_id": {"$exists": True, "$ne": None}}).limit(LIMIT_TEST)
-    for af in q9: print(f"   --> {af['apellido']} -> Médico ID: {af['medico_cabecera_id']}")
+    # 9. Buscar pacientes crónicos sin medicación asignada
+    print("\n9. Buscar pacientes crónicos sin medicación asignada:")
+    q9 = afiliados_col.find({"enfermedades": {"$elemMatch": {"tipo": "cronica","medicacion_actual": {"$size": 0}}}}).limit(LIMIT_TEST)
+    for af in q9: print(f"   --> {af['apellido']} requiere auditoría de tratamiento.")
 
     # 10. Ordenar por fecha de nacimiento (mayor a menor)
     print("\n10. Listar afiliados de mayor edad registrados (Orden por nacimiento):")
