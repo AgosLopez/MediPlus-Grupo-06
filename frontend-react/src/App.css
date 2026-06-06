@@ -391,6 +391,100 @@ body {
 .db-empty  { color: var(--muted); font-size: 13px; font-style: italic; padding: 8px 0; }
 .db-na-msg { color: var(--muted); font-size: 13px; font-style: italic; padding: 8px 0; }
 
+.db-card-tags    { display: flex; flex-wrap: wrap; gap: 5px; align-items: flex-start; }
+.db-card-tag-row { display: inline-flex; align-items: center; gap: 3px; }
+
+.db-card-tag {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 11px;
+  color: var(--text);
+  font-family: var(--mono);
+}
+
+.db-card-tag-btn {
+  background: none;
+  border: 1px solid var(--border2);
+  border-radius: 3px;
+  color: var(--muted);
+  font-size: 12px; font-weight: 700;
+  width: 18px; height: 18px;
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer; padding: 0;
+  font-family: var(--font);
+  transition: all 0.12s;
+  line-height: 1;
+}
+.db-card-tag-btn:hover {
+  border-color: var(--c-mongo);
+  color: var(--c-mongo);
+  background: rgba(110,198,160,0.1);
+}
+
+/* ── Modal ───────────────────────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.65);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(3px);
+}
+
+.modal-box {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-left: 3px solid var(--c-mongo);
+  border-radius: var(--r);
+  width: min(500px, 90vw);
+  max-height: 75vh;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.modal-title {
+  font-size: 14px; font-weight: 700;
+  color: var(--c-mongo);
+}
+
+.modal-close {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--muted);
+  font-size: 11px; font-weight: 600;
+  padding: 4px 10px;
+  cursor: pointer; font-family: var(--font);
+  transition: all 0.12s;
+}
+.modal-close:hover { border-color: var(--red); color: var(--red); }
+
+.modal-body { overflow-y: auto; }
+
+.modal-row {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 7px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+}
+.modal-row:last-child { border-bottom: none; }
+
+.modal-key {
+  min-width: 140px; flex-shrink: 0;
+  color: var(--c-mongo); font-weight: 600;
+  font-family: var(--mono); font-size: 11px; padding-top: 1px;
+}
+.modal-val { color: var(--text); word-break: break-all; }
+
 /* Mutation */
 .db-mutation-result { display: flex; gap: 10px; flex-wrap: wrap; }
 .db-mutation-card {

@@ -48,11 +48,18 @@ export default function LeftPanel({ onResults, setLoading }) {
     }
   }
 
-  const schema       = models[model] || {}
-  const fieldsFilter = schema.fields_filter || []
-  const fieldsCreate = schema.fields_create || []
-  const showFilter   = ['read', 'update', 'delete'].includes(operation)
-  const showData     = ['create', 'update'].includes(operation)
+  const schema   = models[model] || {}
+  const showFilter = ['read', 'update', 'delete'].includes(operation)
+  const showData   = ['create', 'update'].includes(operation)
+
+  const fieldsFilter = (schema.fields_filter || []).map(f => ({ ...f, required: false }))
+
+  const fieldsCreate = (() => {
+    const all = schema.fields_create || []
+    if (operation === 'create') return all.map(f => ({ ...f, required: true }))
+    if (operation === 'update') return all.map(f => ({ ...f, required: false }))
+    return all
+  })()
 
   return (
     <aside className="left-panel">
