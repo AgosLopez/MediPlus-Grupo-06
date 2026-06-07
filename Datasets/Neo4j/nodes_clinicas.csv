@@ -1,0 +1,32 @@
+clinica_id:ID,nombre,direccion,ciudad,zona,nivel:int,:LABEL
+CLI-001,Hospital Italiano,Gascón 450,CABA,CABA,3,Clinica
+CLI-002,Hospital Alemán,Av. Pueyrredón 1640,CABA,CABA,3,Clinica
+CLI-003,Hospital Británico,Perdriel 74,CABA,CABA,3,Clinica
+CLI-004,Sanatorio Güemes,Francisco Acuña 1632,CABA,CABA,3,Clinica
+CLI-005,Sanatorio Mater Dei,San Martín de Tours 2952,CABA,CABA,3,Clinica
+CLI-006,Sanatorio Otamendi,Azcuénaga 870,CABA,CABA,3,Clinica
+CLI-007,Clínica Bazterrica,Juncal 3002,CABA,CABA,2,Clinica
+CLI-008,Clínica Santa Isabel,Av. Directorio 2037,CABA,CABA,2,Clinica
+CLI-009,Hospital Universitario CEMIC,Av. Galván 4102,CABA,CABA,3,Clinica
+CLI-010,Sanatorio Anchorena,Tomás M. de Anchorena 1872,CABA,CABA,2,Clinica
+CLI-011,Hospital Austral,Av. Juan D. Perón 1500,Pilar,GBA Norte,3,Clinica
+CLI-012,Hospital Universitario Austral,Mariano Acosta 1611,Pilar,GBA Norte,3,Clinica
+CLI-013,Sanatorio Las Lomas,Diego Carman 555,San Isidro,GBA Norte,2,Clinica
+CLI-014,Clínica Olivos,Av. Maipú 2660,Olivos,GBA Norte,2,Clinica
+CLI-015,Clínica Vicente López,Av. Maipú 1170,Vicente López,GBA Norte,2,Clinica
+CLI-016,Sanatorio Trinidad San Isidro,Av. del Libertador 14.000,San Isidro,GBA Norte,3,Clinica
+CLI-017,Hospital Privado de Comunidad,Córdoba 4545,San Martín,GBA Norte,2,Clinica
+CLI-018,Clínica Adventista Belgrano,Estomba 1710,CABA,CABA,2,Clinica
+CLI-019,Clínica del Sol,Av. Belgrano 1463,CABA,CABA,2,Clinica
+CLI-020,Hospital El Cruce,Av. Calchaquí 5401,Florencio Varela,GBA Sur,3,Clinica
+CLI-021,Clínica Modelo Lanús,29 de Septiembre 1942,Lanús,GBA Sur,2,Clinica
+CLI-022,Sanatorio Sagrado Corazón Quilmes,Andrés Baranda 460,Quilmes,GBA Sur,2,Clinica
+CLI-023,Clínica Privada Avellaneda,Mitre 350,Avellaneda,GBA Sur,2,Clinica
+CLI-024,Hospital Iriarte,Allison Bell 1115,Quilmes,GBA Sur,2,Clinica
+CLI-025,Clínica Privada Monte Grande,Luis Vernet 320,Monte Grande,GBA Sur,2,Clinica
+CLI-026,Clínica Privada Morón,9 de Julio 750,Morón,GBA Oeste,2,Clinica
+CLI-027,Sanatorio Modelo de Caseros,Triunvirato 4136,Caseros,GBA Oeste,2,Clinica
+CLI-028,Clínica Estrada,José M. Estrada 760,Ramos Mejía,GBA Oeste,2,Clinica
+CLI-029,Hospital Posadas,Pte. Illia s/n,El Palomar,GBA Oeste,3,Clinica
+CLI-030,Clínica San Camilo Caseros,Dr. Liotta 6925,Caseros,GBA Oeste,2,Clinica
+CLI-031,Sanatorio La Trinidad Ramos,Av. de Mayo 1455,Ramos Mejía,GBA Oeste,3,Clinica

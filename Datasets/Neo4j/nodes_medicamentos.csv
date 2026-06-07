@@ -1,0 +1,96 @@
+medicamento_id:ID,nombre_comercial,droga,presentacion,laboratorio,requiere_receta:boolean,precio:float,:LABEL
+MED-00001,Glucophage 500mg,Metformina,500mg comp x 30,Elea,true,1297,Medicamento
+MED-00002,Dabex 500mg,Metformina,500mg comp x 30,Roemmers,true,1662,Medicamento
+MED-00003,Islotin 500mg,Metformina,500mg comp x 30,Pfizer,true,1573,Medicamento
+MED-00004,Glucophage 850mg,Metformina,850mg comp x 30,Elea,true,1554,Medicamento
+MED-00005,Dabex 850mg,Metformina,850mg comp x 30,Phoenix,true,1424,Medicamento
+MED-00006,Islotin 850mg,Metformina,850mg comp x 30,Raffo,true,1519,Medicamento
+MED-00007,Glucophage 1000mg,Metformina,1000mg comp x 60,Roemmers,true,1555,Medicamento
+MED-00008,Dabex 1000mg,Metformina,1000mg comp x 60,Roemmers,true,1506,Medicamento
+MED-00009,Islotin 1000mg,Metformina,1000mg comp x 60,Raffo,true,1803,Medicamento
+MED-00010,Lantus 100UI/ml,Insulina Glargina,100UI/ml lapicera,Elea,true,17379,Medicamento
+MED-00011,Basalin 100UI/ml,Insulina Glargina,100UI/ml lapicera,Roemmers,true,20402,Medicamento
+MED-00012,Renitec 10mg,Enalapril,10mg comp x 30,Bayer,true,1360,Medicamento
+MED-00013,Lotrial 10mg,Enalapril,10mg comp x 30,Roche,true,1472,Medicamento
+MED-00014,Renitec 20mg,Enalapril,20mg comp x 30,Pfizer,true,1063,Medicamento
+MED-00015,Lotrial 20mg,Enalapril,20mg comp x 30,Pfizer,true,1474,Medicamento
+MED-00016,Cozaar 50mg,Losartán,50mg comp x 30,Roemmers,true,1966,Medicamento
+MED-00017,Loretrans 50mg,Losartán,50mg comp x 30,Bagó,true,1907,Medicamento
+MED-00018,Cozaar 100mg,Losartán,100mg comp x 30,Roemmers,true,2234,Medicamento
+MED-00019,Loretrans 100mg,Losartán,100mg comp x 30,Phoenix,true,2667,Medicamento
+MED-00020,Norvasc 5mg,Amlodipina,5mg comp x 30,Roche,true,1706,Medicamento
+MED-00021,Amlodil 5mg,Amlodipina,5mg comp x 30,Bagó,true,1899,Medicamento
+MED-00022,Norvasc 10mg,Amlodipina,10mg comp x 30,Pfizer,true,1577,Medicamento
+MED-00023,Amlodil 10mg,Amlodipina,10mg comp x 30,Casasco,true,1868,Medicamento
+MED-00024,Tenormin 50mg,Atenolol,50mg comp x 30,Raffo,true,1250,Medicamento
+MED-00025,Atenol 50mg,Atenolol,50mg comp x 30,Casasco,true,1033,Medicamento
+MED-00026,Lipitor 10mg,Atorvastatina,10mg comp x 30,Pfizer,true,3963,Medicamento
+MED-00027,Atorlip 10mg,Atorvastatina,10mg comp x 30,Raffo,true,3425,Medicamento
+MED-00028,Lipitor 20mg,Atorvastatina,20mg comp x 30,Casasco,true,3982,Medicamento
+MED-00029,Atorlip 20mg,Atorvastatina,20mg comp x 30,Casasco,true,2881,Medicamento
+MED-00030,Lipitor 40mg,Atorvastatina,40mg comp x 30,Roche,true,3355,Medicamento
+MED-00031,Atorlip 40mg,Atorvastatina,40mg comp x 30,Roche,true,3997,Medicamento
+MED-00032,Crestor 10mg,Rosuvastatina,10mg comp x 30,Pfizer,true,4403,Medicamento
+MED-00033,Razel 10mg,Rosuvastatina,10mg comp x 30,Roche,true,4884,Medicamento
+MED-00034,Crestor 20mg,Rosuvastatina,20mg comp x 30,Roche,true,5311,Medicamento
+MED-00035,Razel 20mg,Rosuvastatina,20mg comp x 30,Casasco,true,4286,Medicamento
+MED-00036,T4 50mcg,Levotiroxina,50mcg comp x 50,Phoenix,true,1649,Medicamento
+MED-00037,Levotiroides 50mcg,Levotiroxina,50mcg comp x 50,Pfizer,true,1438,Medicamento
+MED-00038,T4 100mcg,Levotiroxina,100mcg comp x 50,Roche,true,1336,Medicamento
+MED-00039,Levotiroides 100mcg,Levotiroxina,100mcg comp x 50,Phoenix,true,1723,Medicamento
+MED-00040,Ventolin 100mcg/dosis,Salbutamol,100mcg/dosis aerosol,Gador,true,2590,Medicamento
+MED-00041,Asmatol 100mcg/dosis,Salbutamol,100mcg/dosis aerosol,Bagó,true,2461,Medicamento
+MED-00042,Ventolin 0.5mg/ml,Salbutamol,0.5mg/ml jarabe,Raffo,true,3278,Medicamento
+MED-00043,Asmatol 0.5mg/ml,Salbutamol,0.5mg/ml jarabe,Bayer,true,3460,Medicamento
+MED-00044,Pulmicort 200mcg/dosis,Budesonida,200mcg/dosis inhalador,Elea,true,5517,Medicamento
+MED-00045,Neumotex 200mcg/dosis,Budesonida,200mcg/dosis inhalador,Raffo,true,5610,Medicamento
+MED-00046,Pulmicort 100mcg/dosis,Budesonida,100mcg/dosis,Raffo,true,5992,Medicamento
+MED-00047,Neumotex 100mcg/dosis,Budesonida,100mcg/dosis,Bagó,true,5822,Medicamento
+MED-00048,Losec 20mg,Omeprazol,20mg cap x 28,Bagó,false,958,Medicamento
+MED-00049,Ulcozol 20mg,Omeprazol,20mg cap x 28,Roemmers,false,1100,Medicamento
+MED-00050,Losec 40mg,Omeprazol,40mg cap x 14,Elea,false,1080,Medicamento
+MED-00051,Ulcozol 40mg,Omeprazol,40mg cap x 14,Bagó,false,1063,Medicamento
+MED-00052,Pantec 40mg,Pantoprazol,40mg comp x 14,Roche,true,2027,Medicamento
+MED-00053,Zurcal 40mg,Pantoprazol,40mg comp x 14,Casasco,true,2177,Medicamento
+MED-00054,Tafirol 500mg,Paracetamol,500mg comp x 20,Raffo,false,549,Medicamento
+MED-00055,Termofren 500mg,Paracetamol,500mg comp x 20,Bagó,false,658,Medicamento
+MED-00056,Tafirol 1g,Paracetamol,1g comp x 10,Raffo,false,675,Medicamento
+MED-00057,Termofren 1g,Paracetamol,1g comp x 10,Roche,false,529,Medicamento
+MED-00058,Ibupirac 400mg,Ibuprofeno,400mg comp x 20,Gador,false,951,Medicamento
+MED-00059,Actron 400mg,Ibuprofeno,400mg comp x 20,Roemmers,false,1012,Medicamento
+MED-00060,Ibupirac 600mg,Ibuprofeno,600mg comp x 20,Raffo,false,736,Medicamento
+MED-00061,Actron 600mg,Ibuprofeno,600mg comp x 20,Raffo,false,760,Medicamento
+MED-00062,Voltaren 50mg,Diclofenac,50mg comp x 20,Raffo,false,1338,Medicamento
+MED-00063,Cataflam 50mg,Diclofenac,50mg comp x 20,Roche,false,1125,Medicamento
+MED-00064,Voltaren 75mg,Diclofenac,75mg amp,Roemmers,false,1085,Medicamento
+MED-00065,Cataflam 75mg,Diclofenac,75mg amp,Raffo,false,974,Medicamento
+MED-00066,Zoloft 50mg,Sertralina,50mg comp x 30,Raffo,true,3457,Medicamento
+MED-00067,Atenix 50mg,Sertralina,50mg comp x 30,Roche,true,3089,Medicamento
+MED-00068,Zoloft 100mg,Sertralina,100mg comp x 30,Gador,true,3892,Medicamento
+MED-00069,Atenix 100mg,Sertralina,100mg comp x 30,Roche,true,4091,Medicamento
+MED-00070,Lexapro 10mg,Escitalopram,10mg comp x 30,Casasco,true,4042,Medicamento
+MED-00071,Ipran 10mg,Escitalopram,10mg comp x 30,Bagó,true,3880,Medicamento
+MED-00072,Lexapro 20mg,Escitalopram,20mg comp x 30,Raffo,true,4237,Medicamento
+MED-00073,Ipran 20mg,Escitalopram,20mg comp x 30,Roemmers,true,4536,Medicamento
+MED-00074,Xanax 0.25mg,Alprazolam,0.25mg comp x 30,Elea,true,2914,Medicamento
+MED-00075,Alplax 0.25mg,Alprazolam,0.25mg comp x 30,Roche,true,3411,Medicamento
+MED-00076,Xanax 0.5mg,Alprazolam,0.5mg comp x 30,Bayer,true,3210,Medicamento
+MED-00077,Alplax 0.5mg,Alprazolam,0.5mg comp x 30,Roche,true,3144,Medicamento
+MED-00078,Rivotril 0.5mg,Clonazepam,0.5mg comp x 30,Phoenix,true,1855,Medicamento
+MED-00079,Diocam 0.5mg,Clonazepam,0.5mg comp x 30,Gador,true,1967,Medicamento
+MED-00080,Rivotril 2mg,Clonazepam,2mg comp x 30,Roche,true,2130,Medicamento
+MED-00081,Diocam 2mg,Clonazepam,2mg comp x 30,Raffo,true,2240,Medicamento
+MED-00082,Claritin 10mg,Loratadina,10mg comp x 10,Pfizer,false,1163,Medicamento
+MED-00083,Lertamine 10mg,Loratadina,10mg comp x 10,Gador,false,1082,Medicamento
+MED-00084,Zyrtec 10mg,Cetirizina,10mg comp x 10,Bayer,false,1249,Medicamento
+MED-00085,Alercet 10mg,Cetirizina,10mg comp x 10,Bagó,false,1047,Medicamento
+MED-00086,Amoxidal 500mg,Amoxicilina,500mg cap x 21,Phoenix,true,2131,Medicamento
+MED-00087,Trifamox 500mg,Amoxicilina,500mg cap x 21,Gador,true,2955,Medicamento
+MED-00088,Amoxidal 875mg,Amoxicilina,875mg cap x 14,Roche,true,2447,Medicamento
+MED-00089,Trifamox 875mg,Amoxicilina,875mg cap x 14,Pfizer,true,2242,Medicamento
+MED-00090,Zitromax 500mg,Azitromicina,500mg comp x 3,Bayer,true,3043,Medicamento
+MED-00091,Atizor 500mg,Azitromicina,500mg comp x 3,Pfizer,true,3881,Medicamento
+MED-00092,Keflex 500mg,Cefalexina,500mg cap x 21,Roemmers,true,2087,Medicamento
+MED-00093,Mensporin 500mg,Cefalexina,500mg cap x 21,Roche,true,2457,Medicamento
+MED-00094,Cipro 500mg,Ciprofloxacina,500mg comp x 14,Bayer,true,2444,Medicamento
+MED-00095,Microxin 500mg,Ciprofloxacina,500mg comp x 14,Bagó,true,2515,Medicamento
