@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
@@ -11,6 +11,8 @@ import os
 import json
 import uuid
 import certifi
+
+
 
 os.environ["SSL_CERT_FILE"] = certifi.where()
 from datetime import date
@@ -28,6 +30,20 @@ app.add_middleware(
 )
 
 # ── Conexiones ────────────────────────────────────────────────────────────────
+
+
+
+
+def get_db():
+    return get_astra()
+
+def format_docs(cursor):
+    """Función auxiliar para convertir el cursor a lista y limpiar el _id"""
+    datos = list(cursor)
+    for d in datos:
+        d.pop("_id", None)
+    return datos
+
 
 def get_neo4j():
     try:
@@ -448,112 +464,54 @@ def get_models_endpoint():
         for name, schema in MODELS.items()
     }
 
-@app.get("/api/cassandra")
-def ver_colecciones():
-
-    db = get_astra()
-
-    return db.list_collection_names()
-
 @app.get("/api/dashboard/gastos")
-def dashboard_gastos():
-
-    db = get_astra()
-
-    col = db.get_collection("gasto_mensual_por_afiliado")
-
-    datos = list(
-        col.find({}, limit=1000)
-    )
-
-    for d in datos:
-        d.pop("_id", None)
-
-    return datos
+def dashboard_gastos(db = Depends(get_db)):
+    col = db.get_collection("gastos_mensuales_por_afiliado")
+    return format_docs(col.find({}, limit=100))
 
 @app.get("/api/dashboard/medicamentos")
-def dashboard_medicamentos():
-
-    db = get_astra()
-
-    col = db.get_collection("uso_medicamentos_mes")
-
-    datos = list(col.find({}, limit=1000))
-
-    for d in datos:
-        d.pop("_id", None)
-
-    return datos
+def dashboard_medicamentos(db = Depends(get_db)):
+    col = db.get_collection("uso_medicamento_por_clinica_mes")
+    return format_docs(col.find({}, limit=100))
 
 @app.get("/api/dashboard/especialidades")
-def dashboard_especialidades():
-
-    db = get_astra()
-
-    col = db.get_collection("gasto_por_especialidad_mes")
-
-    datos = list(col.find({}, limit=1000))
-
-    for d in datos:
-        d.pop("_id", None)
-
-    return datos
+def dashboard_especialidades(db = Depends(get_db)):
+    col = db.get_collection("atenciones_por_especialidad_mes")
+    return format_docs(col.find({}, limit=100))
 
 @app.get("/api/dashboard/clinicas")
-def dashboard_clinicas():
-
-    db = get_astra()
-
-    col = db.get_collection("eventos_por_clinica_mes")
-
-    datos = list(col.find({}, limit=1000))
-
-    for d in datos:
-        d.pop("_id", None)
-
-    return datos
+def dashboard_clinicas(db = Depends(get_db)):
+    col = db.get_collection("atenciones_por_clinica_mes")
+    return format_docs(col.find({}, limit=100))
 
 @app.get("/api/dashboard/diagnosticos")
-def dashboard_diagnosticos():
-
-    db = get_astra()
-
-    col = db.get_collection("eventos_por_zona_diagnostico_mes")
-
-    datos = list(col.find({}, limit=1000))
-
-    for d in datos:
-        d.pop("_id", None)
-
-    return datos
+def dashboard_diagnosticos(db = Depends(get_db)):
+    col = db.get_collection("eventos_clinicos_por_zona_mes")
+    return format_docs(col.find({}, limit=100))
 
 @app.get("/api/dashboard/credenciales")
-def dashboard_credenciales():
-
-    db = get_astra()
-
-    col = db.get_collection("eventos_uso_credencial")
-
-    datos = list(col.find({}, limit=1000))
-
-    for d in datos:
-        d.pop("_id", None)
-
-    return datos
+def dashboard_credenciales(db = Depends(get_db)):
+    col = db.get_collection("eventos_credencial_por_afiliado")
+    return format_docs(col.find({}, limit=100))
 
 @app.get("/api/dashboard/prestaciones")
-def dashboard_prestaciones():
+def dashboard_prestaciones(db = Depends(get_db)):
+    col = db.get_collection("prestaciones_por_afiliado_periodo")
+    return format_docs(col.find({}, limit=100))
 
-    db = get_astra()
+@app.get("/api/dashboard/zonas")
+def dashboard_zonas(db = Depends(get_db)):
+    table = db.get_table("eventos_clinicos_por_zona_mes")
 
-    col = db.get_collection("prestaciones_por_afiliado")
+    resultados = []
 
-    datos = list(col.find({}, limit=1000))
+    for fila in table.find():
+        resultados.append(fila)
 
-    for d in datos:
-        d.pop("_id", None)
+        if len(resultados) >= 100:
+            break
 
-    return datos
+    return resultados
 
 
 class OperationRequest(BaseModel):
