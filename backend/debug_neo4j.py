@@ -50,7 +50,7 @@ try:
     mongo_uri = os.getenv("MONGO_URI")
     client = MongoClient(mongo_uri, serverSelectionTimeoutMS=5000)
     client.admin.command("ping")
-    db = client["mediplus"]
+    db = client["MediPlus"]
     cols = db.list_collection_names()
     print(f"  CONECTADO  — colecciones: {cols if cols else '(vacío)'}")
 except Exception as e:
