@@ -448,6 +448,114 @@ def get_models_endpoint():
         for name, schema in MODELS.items()
     }
 
+@app.get("/api/cassandra")
+def ver_colecciones():
+
+    db = get_astra()
+
+    return db.list_collection_names()
+
+@app.get("/api/dashboard/gastos")
+def dashboard_gastos():
+
+    db = get_astra()
+
+    col = db.get_collection("gasto_mensual_por_afiliado")
+
+    datos = list(
+        col.find({}, limit=1000)
+    )
+
+    for d in datos:
+        d.pop("_id", None)
+
+    return datos
+
+@app.get("/api/dashboard/medicamentos")
+def dashboard_medicamentos():
+
+    db = get_astra()
+
+    col = db.get_collection("uso_medicamentos_mes")
+
+    datos = list(col.find({}, limit=1000))
+
+    for d in datos:
+        d.pop("_id", None)
+
+    return datos
+
+@app.get("/api/dashboard/especialidades")
+def dashboard_especialidades():
+
+    db = get_astra()
+
+    col = db.get_collection("gasto_por_especialidad_mes")
+
+    datos = list(col.find({}, limit=1000))
+
+    for d in datos:
+        d.pop("_id", None)
+
+    return datos
+
+@app.get("/api/dashboard/clinicas")
+def dashboard_clinicas():
+
+    db = get_astra()
+
+    col = db.get_collection("eventos_por_clinica_mes")
+
+    datos = list(col.find({}, limit=1000))
+
+    for d in datos:
+        d.pop("_id", None)
+
+    return datos
+
+@app.get("/api/dashboard/diagnosticos")
+def dashboard_diagnosticos():
+
+    db = get_astra()
+
+    col = db.get_collection("eventos_por_zona_diagnostico_mes")
+
+    datos = list(col.find({}, limit=1000))
+
+    for d in datos:
+        d.pop("_id", None)
+
+    return datos
+
+@app.get("/api/dashboard/credenciales")
+def dashboard_credenciales():
+
+    db = get_astra()
+
+    col = db.get_collection("eventos_uso_credencial")
+
+    datos = list(col.find({}, limit=1000))
+
+    for d in datos:
+        d.pop("_id", None)
+
+    return datos
+
+@app.get("/api/dashboard/prestaciones")
+def dashboard_prestaciones():
+
+    db = get_astra()
+
+    col = db.get_collection("prestaciones_por_afiliado")
+
+    datos = list(col.find({}, limit=1000))
+
+    for d in datos:
+        d.pop("_id", None)
+
+    return datos
+
+
 class OperationRequest(BaseModel):
     operation: str
     model: str
