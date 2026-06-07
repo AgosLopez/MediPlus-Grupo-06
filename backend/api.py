@@ -10,7 +10,11 @@ from astrapy import DataAPIClient
 import os
 import json
 import uuid
+import certifi
+
+os.environ["SSL_CERT_FILE"] = certifi.where()
 from datetime import date
+
 
 load_dotenv()
 
@@ -75,7 +79,7 @@ def get_astra():
 # ── Esquemas de modelos ───────────────────────────────────────────────────────
 
 _ZONAS   = ["CABA", "GBA Norte", "GBA Sur", "GBA Oeste", "Interior"]
-_PLANES  = ["BASICO", "ORO", "PLATINO"]
+_PLANES  = ["BASICO", "PLATA", "ORO", "FAMILIAR", "PLATINO"]
 _GENEROS = ["M", "F", "X"]
 _SANGRE  = ["A+","A-","B+","B-","AB+","AB-","O+","O-"]
 
@@ -83,22 +87,26 @@ MODELS = {
     "Afiliado": {
         # Campos para búsqueda / filtro (READ, UPDATE filter, DELETE)
         "fields_filter": [
-            {"name": "numero_afiliado", "type": "text",   "required": False},
-            {"name": "zona",            "type": "select", "options": _ZONAS,  "required": False},
-            {"name": "plan_salud",      "type": "select", "options": _PLANES, "required": False},
+            {"name": "numero_afiliado", "type": "text", "required": False},
+            {"name": "dni",             "type": "text", "required": False},
         ],
         # Campos para inserción / actualización de datos (CREATE, UPDATE data)
         "fields_create": [
             {"name": "nombre",           "type": "text",   "required": True},
             {"name": "apellido",         "type": "text",   "required": True},
             {"name": "dni",              "type": "text",   "required": True},
-            {"name": "email",            "type": "email",  "required": False},
-            {"name": "telefono",         "type": "text",   "required": False},
+            {"name": "email",            "type": "email",  "required": True},
+            {"name": "telefono",         "type": "text",   "required": True},
             {"name": "plan_salud",       "type": "select", "options": _PLANES,  "required": True},
             {"name": "zona",             "type": "select", "options": _ZONAS,   "required": True},
             {"name": "genero",           "type": "select", "options": _GENEROS, "required": True},
-            {"name": "fecha_nacimiento", "type": "date",   "required": False},
-            {"name": "grupo_sanguineo",  "type": "select", "options": _SANGRE,  "required": False},
+            {"name": "fecha_nacimiento", "type": "date",   "required": True},
+            {"name": "grupo_sanguineo",  "type": "select", "options": _SANGRE,  "required": True},
+            {"name": "calle",            "type": "text",   "required": True},
+            {"name": "numero",           "type": "text",   "required": True},
+            {"name": "ciudad",           "type": "text",   "required": True},
+            {"name": "provincia",        "type": "text",   "required": True},
+            {"name": "codigo_postal",    "type": "text",   "required": True},
         ],
         "neo4j_label":          "Afiliado",
         "neo4j_prop_map":       {},
@@ -110,8 +118,7 @@ MODELS = {
     "Medico": {
         "fields_filter": [
             {"name": "medico_id",    "type": "text", "required": False},
-            {"name": "nombre",       "type": "text", "required": False},
-            {"name": "apellido",     "type": "text", "required": False},
+            {"name": "dni",          "type": "text", "required": False},
             {"name": "especialidad", "type": "text", "required": False},
         ],
         "fields_create": [
@@ -130,9 +137,8 @@ MODELS = {
     },
     "Clinica": {
         "fields_filter": [
-            {"name": "clinica_id", "type": "text",   "required": False},
-            {"name": "nombre",     "type": "text",   "required": False},
-            {"name": "zona",       "type": "select", "options": _ZONAS, "required": False},
+            {"name": "clinica_id", "type": "text", "required": False},
+            {"name": "nombre",     "type": "text", "required": False},
         ],
         "fields_create": [
             {"name": "clinica_id", "type": "text",   "required": True},
@@ -264,39 +270,53 @@ def neo4j_to_graph(records, node_keys, rel_keys):
             rels.append({"source": src, "target": tgt, "type": rel.type})
     return {"nodes": list(nodes_map.values()), "relationships": rels}
 
-def _next_afiliado_id(col):
-    """Genera el proximo afiliado_id basado en el conteo actual de la coleccion."""
-    count = col.count_documents({})
-    num = count + 1
+def _next_afiliado_id(db):
+    """Genera el proximo afiliado_id usando un contador atomico en MongoDB.
+
+    Usa find_one_and_update + $inc, que MongoDB ejecuta atomicamente,
+    eliminando la race condition del count_documents() + 1 anterior.
+    $setOnInsert inicializa el contador al conteo actual solo en la primera
+    llamada (upsert), preservando los IDs ya existentes.
+    """
+    db["counters"].update_one(
+        {"_id": "afiliado_seq"},
+        {"$setOnInsert": {"seq": db["afiliados"].count_documents({})}},
+        upsert=True,
+    )
+    result = db["counters"].find_one_and_update(
+        {"_id": "afiliado_seq"},
+        {"$inc": {"seq": 1}},
+        return_document=True,
+    )
+    num = result["seq"]
     return f"AF-{num:06d}", f"AF-2024-{num:07d}"
 
 def _mongo_afiliado_filter(flt):
     """Mapea campos planos del formulario a las rutas reales de MongoDB."""
+    if "afiliado_id"     in flt: return {"_id":            flt["afiliado_id"]}
+    if "numero_afiliado" in flt: return {"numero_afiliado": flt["numero_afiliado"]}
+    if "dni"             in flt: return {"dni":             flt["dni"]}
     mongo_flt = {}
-    if "afiliado_id" in flt:
-        mongo_flt["_id"] = flt["afiliado_id"]
-    elif "numero_afiliado" in flt:
-        mongo_flt["numero_afiliado"] = flt["numero_afiliado"]
-    elif "dni" in flt:
-        mongo_flt["dni"] = flt["dni"]
-    else:
-        for k, v in flt.items():
-            if k == "plan_salud":
-                mongo_flt["plan_salud.codigo_plan"] = v
-            elif k == "zona":
-                mongo_flt["direccion.zona"] = v
-            else:
-                mongo_flt[k] = v
+    for k, v in flt.items():
+        if k == "plan_salud":
+            mongo_flt["plan_salud.codigo_plan"] = v
+        elif k == "zona":
+            mongo_flt["direccion.zona"] = v
+        elif k in ("nombre", "apellido"):
+            mongo_flt[k] = {"$regex": v, "$options": "i"}
+        else:
+            mongo_flt[k] = v
     return mongo_flt
 
 def _mongo_afiliado_set(data):
     """Mapea campos planos a rutas correctas para $set."""
+    _addr = {"calle", "numero", "ciudad", "provincia", "codigo_postal", "zona"}
     set_doc = {}
     for k, v in data.items():
         if k == "plan_salud":
             set_doc["plan_salud.codigo_plan"] = v
-        elif k == "zona":
-            set_doc["direccion.zona"] = v
+        elif k in _addr:
+            set_doc[f"direccion.{k}"] = v
         else:
             set_doc[k] = v
     return set_doc
@@ -305,13 +325,14 @@ def _build_afiliado_mongo_doc(afiliado_id, numero_afiliado, data):
     """Convierte los campos planos del formulario al documento MongoDB real."""
     hoy = str(date.today())
     plan_cod = data.get("plan_salud", "BASICO")
-    copagos = {"BASICO": 3500, "ORO": 2000, "PLATINO": 1000}
-    coberturas = {
-        "BASICO":  {"medicamentos": 40, "estudios": 60,  "cuota": 25000},
-        "ORO":     {"medicamentos": 60, "estudios": 75,  "cuota": 45000},
-        "PLATINO": {"medicamentos": 80, "estudios": 90,  "cuota": 70000},
+    planes = {
+        "BASICO":   {"cuota": 25000,  "medicamentos": 40,  "estudios": 60,  "copago": 3500},
+        "PLATA":    {"cuota": 50000,  "medicamentos": 50,  "estudios": 75,  "copago": 2000},
+        "ORO":      {"cuota": 90000,  "medicamentos": 70,  "estudios": 90,  "copago": 1000},
+        "FAMILIAR": {"cuota": 110000, "medicamentos": 80,  "estudios": 95,  "copago": 500},
+        "PLATINO":  {"cuota": 150000, "medicamentos": 100, "estudios": 100, "copago": 0},
     }
-    cob = coberturas.get(plan_cod, coberturas["BASICO"])
+    plan = planes.get(plan_cod, planes["BASICO"])
     return {
         "_id":               afiliado_id,
         "numero_afiliado":   numero_afiliado,
@@ -324,17 +345,22 @@ def _build_afiliado_mongo_doc(afiliado_id, numero_afiliado, data):
         "telefono":          data.get("telefono", ""),
         "grupo_sanguineo":   data.get("grupo_sanguineo", ""),
         "direccion": {
-            "zona": data.get("zona", ""),
+            "calle":         data.get("calle", ""),
+            "numero":        data.get("numero", ""),
+            "ciudad":        data.get("ciudad", ""),
+            "provincia":     data.get("provincia", ""),
+            "codigo_postal": data.get("codigo_postal", ""),
+            "zona":          data.get("zona", ""),
         },
         "plan_salud": {
-            "codigo_plan":           plan_cod,
-            "nombre":                plan_cod.capitalize(),
-            "cuota_mensual":         cob["cuota"],
-            "cobertura_medicamentos": cob["medicamentos"],
-            "cobertura_estudios":    cob["estudios"],
-            "copago_consulta":       copagos.get(plan_cod, 3500),
-            "fecha_alta":            hoy,
-            "estado":                "activo",
+            "codigo_plan":            plan_cod,
+            "nombre":                 plan_cod.capitalize(),
+            "cuota_mensual":          plan["cuota"],
+            "cobertura_medicamentos": plan["medicamentos"],
+            "cobertura_estudios":     plan["estudios"],
+            "copago_consulta":        plan["copago"],
+            "fecha_alta":             hoy,
+            "estado":                 "activo",
         },
         "enfermedades": [],
         "fecha_alta":    hoy,
@@ -397,7 +423,7 @@ async def health():
         except Exception:
             return "error"
 
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
     results = await asyncio.gather(
         loop.run_in_executor(None, check_neo4j),
         loop.run_in_executor(None, check_mongo),
@@ -421,6 +447,114 @@ def get_models_endpoint():
         }
         for name, schema in MODELS.items()
     }
+
+@app.get("/api/cassandra")
+def ver_colecciones():
+
+    db = get_astra()
+
+    return db.list_collection_names()
+
+@app.get("/api/dashboard/gastos")
+def dashboard_gastos():
+
+    db = get_astra()
+
+    col = db.get_collection("gasto_mensual_por_afiliado")
+
+    datos = list(
+        col.find({}, limit=1000)
+    )
+
+    for d in datos:
+        d.pop("_id", None)
+
+    return datos
+
+@app.get("/api/dashboard/medicamentos")
+def dashboard_medicamentos():
+
+    db = get_astra()
+
+    col = db.get_collection("uso_medicamentos_mes")
+
+    datos = list(col.find({}, limit=1000))
+
+    for d in datos:
+        d.pop("_id", None)
+
+    return datos
+
+@app.get("/api/dashboard/especialidades")
+def dashboard_especialidades():
+
+    db = get_astra()
+
+    col = db.get_collection("gasto_por_especialidad_mes")
+
+    datos = list(col.find({}, limit=1000))
+
+    for d in datos:
+        d.pop("_id", None)
+
+    return datos
+
+@app.get("/api/dashboard/clinicas")
+def dashboard_clinicas():
+
+    db = get_astra()
+
+    col = db.get_collection("eventos_por_clinica_mes")
+
+    datos = list(col.find({}, limit=1000))
+
+    for d in datos:
+        d.pop("_id", None)
+
+    return datos
+
+@app.get("/api/dashboard/diagnosticos")
+def dashboard_diagnosticos():
+
+    db = get_astra()
+
+    col = db.get_collection("eventos_por_zona_diagnostico_mes")
+
+    datos = list(col.find({}, limit=1000))
+
+    for d in datos:
+        d.pop("_id", None)
+
+    return datos
+
+@app.get("/api/dashboard/credenciales")
+def dashboard_credenciales():
+
+    db = get_astra()
+
+    col = db.get_collection("eventos_uso_credencial")
+
+    datos = list(col.find({}, limit=1000))
+
+    for d in datos:
+        d.pop("_id", None)
+
+    return datos
+
+@app.get("/api/dashboard/prestaciones")
+def dashboard_prestaciones():
+
+    db = get_astra()
+
+    col = db.get_collection("prestaciones_por_afiliado")
+
+    datos = list(col.find({}, limit=1000))
+
+    for d in datos:
+        d.pop("_id", None)
+
+    return datos
+
 
 class OperationRequest(BaseModel):
     operation: str
@@ -451,6 +585,14 @@ def _execute_operation_inner(req: OperationRequest):
     op      = req.operation
     results = {}
 
+    if op == "delete" and not flt:
+        e = err(ValueError("Se requiere al menos un filtro para eliminar"))
+        return {"neo4j": e, "mongodb": e, "redis": e, "cassandra": e}
+
+    if op == "update" and not data:
+        e = err(ValueError("Se requieren datos nuevos para actualizar"))
+        return {"neo4j": e, "mongodb": e, "redis": e, "cassandra": e}
+
     # ── Generar IDs para Afiliado en CREATE ───────────────────────────────────
     # Se resuelve antes de tocar cualquier DB para que todos los motores
     # reciban el mismo afiliado_id y numero_afiliado.
@@ -459,7 +601,7 @@ def _execute_operation_inner(req: OperationRequest):
     if req.model == "Afiliado" and op == "create":
         mongo_db_tmp, mongo_client_tmp = get_mongo()
         if mongo_db_tmp is not None:
-            afiliado_id, numero_afiliado = _next_afiliado_id(mongo_db_tmp["afiliados"])
+            afiliado_id, numero_afiliado = _next_afiliado_id(mongo_db_tmp)
             mongo_client_tmp.close()
         else:
             # Fallback si Mongo no está disponible
@@ -467,6 +609,22 @@ def _execute_operation_inner(req: OperationRequest):
             n = random.randint(10000, 99999)
             afiliado_id     = f"AF-{n:06d}"
             numero_afiliado = f"AF-2024-{n:07d}"
+
+    # ── Enriquecimiento DNI → numero_afiliado para Neo4j ─────────────────────
+    # Neo4j no almacena DNI; si el filtro es solo DNI se consulta MongoDB
+    # primero para obtener el numero_afiliado y usarlo en el grafo.
+    neo4j_flt = flt
+    if req.model == "Afiliado" and op == "read" and "dni" in flt and "numero_afiliado" not in flt:
+        _mdb, _mcli = get_mongo()
+        if _mdb is not None:
+            try:
+                _doc = _mdb["afiliados"].find_one(
+                    {"dni": flt["dni"]}, {"numero_afiliado": 1, "_id": 0}
+                )
+                if _doc and _doc.get("numero_afiliado"):
+                    neo4j_flt = {"numero_afiliado": _doc["numero_afiliado"]}
+            finally:
+                _mcli.close()
 
     # ── Neo4j ────────────────────────────────────────────────────────────────
     driver = get_neo4j()
@@ -478,9 +636,9 @@ def _execute_operation_inner(req: OperationRequest):
                     gq       = GRAPH_QUERIES.get(req.model)
                     alias    = gq["alias"] if gq else "n"
                     prop_map = schema.get("neo4j_prop_map", {})
-                    if flt:
+                    if neo4j_flt:
                         parts = []
-                        for k in flt:
+                        for k in neo4j_flt:
                             if k in prop_map:
                                 # Match both imported (:ID) and created (plain) property names
                                 parts.append(f"({alias}.{prop_map[k]} = ${k} OR {alias}.{k} = ${k})")
@@ -491,11 +649,11 @@ def _execute_operation_inner(req: OperationRequest):
                         where = ""
                     if gq:
                         query = gq["template"].replace("{where}", where)
-                        rows  = list(s.run(query, **flt))
+                        rows  = list(s.run(query, **neo4j_flt))
                         result_data = neo4j_to_graph(rows, gq["nodes"], gq["rels"])
                     else:
                         query = f"MATCH (n:{label}) {where} RETURN n LIMIT 10"
-                        rows  = list(s.run(query, **flt))
+                        rows  = list(s.run(query, **neo4j_flt))
                         result_data = [neo4j_node_to_dict(r["n"]) for r in rows]
 
                 elif op == "create":
@@ -540,9 +698,14 @@ def _execute_operation_inner(req: OperationRequest):
                         where = "WHERE " + " AND ".join(parts)
                     else:
                         where = ""
-                    query = f"MATCH (n:{label}) {where} DETACH DELETE n RETURN count(n) AS deleted"
-                    rows  = list(s.run(query, **flt))
-                    result_data = {"deleted": rows[0]["deleted"] if rows else 0}
+                    if req.model == "Afiliado":
+                        query = f"MATCH (n:{label}) {where} SET n.activo = false RETURN count(n) AS updated"
+                        rows  = list(s.run(query, **flt))
+                        result_data = {"desactivados": rows[0]["updated"] if rows else 0}
+                    else:
+                        query = f"MATCH (n:{label}) {where} DETACH DELETE n RETURN count(n) AS deleted"
+                        rows  = list(s.run(query, **flt))
+                        result_data = {"deleted": rows[0]["deleted"] if rows else 0}
 
                 else:
                     raise ValueError(f"Operacion desconocida: {op}")
@@ -585,9 +748,9 @@ def _execute_operation_inner(req: OperationRequest):
 
                 elif op == "delete":
                     mongo_flt = _mongo_afiliado_filter(flt)
-                    res   = col.delete_many(mongo_flt)
-                    query = f'db.{col_name}.deleteMany({json.dumps(mongo_flt)})'
-                    results["mongodb"] = ok({"deleted": res.deleted_count}, query)
+                    res   = col.update_many(mongo_flt, {"$set": {"activo": False, "plan_salud.estado": "inactivo"}})
+                    query = f'db.{col_name}.updateMany({json.dumps(mongo_flt)}, {{$set: {{activo: false, "plan_salud.estado": "inactivo"}}}})'
+                    results["mongodb"] = ok({"desactivados": res.modified_count}, query)
 
             except Exception as e:
                 results["mongodb"] = err(e)
@@ -733,11 +896,17 @@ def _execute_operation_inner(req: OperationRequest):
                         if "afiliado_id" in flt:
                             cass_flt["afiliado_id"] = flt["afiliado_id"]
                         elif "numero_afiliado" in flt:
-                            cass_flt["afiliado_id"] = flt["numero_afiliado"]
+                            # numero_afiliado="AF-2024-0000006" → afiliado_id="AF-000006"
+                            parts = flt["numero_afiliado"].split("-")
+                            if len(parts) == 3 and parts[0] == "AF":
+                                cass_flt["afiliado_id"] = f"AF-{int(parts[2]):06d}"
+                            else:
+                                cass_flt["numero_afiliado"] = flt["numero_afiliado"]
                         # tabla: eventos_por_afiliado PK=(afiliado_id, fecha_evento, evento_id)
+                        where_clause = " AND ".join(f"{k} = '{v}'" for k, v in cass_flt.items())
                         cql = (
                             f"SELECT * FROM prepaga.prestaciones_por_afiliado"
-                            + (f" WHERE afiliado_id = '{cass_flt.get('afiliado_id', '?')}'" if cass_flt else "")
+                            + (f" WHERE {where_clause}" if cass_flt else "")
                             + " LIMIT 10;"
                         )
                     elif req.model == "Medicamento":
@@ -762,6 +931,7 @@ def _execute_operation_inner(req: OperationRequest):
                     if req.model == "Afiliado":
                         doc = {
                             "afiliado_id":    afiliado_id,
+                            "numero_afiliado": numero_afiliado,
                             "evento_id":      f"EVT-{uuid.uuid4().hex[:8].upper()}",
                             "fecha_evento":   str(date.today()) + "T00:00:00",
                             "tipo_prestacion": "alta",
@@ -801,18 +971,44 @@ def _execute_operation_inner(req: OperationRequest):
                     results["cassandra"] = ok(doc, cql)
 
                 elif op == "update":
-                    col.update_many(flt, {"$set": data})
+                    if req.model == "Afiliado":
+                        cass_flt_op = {}
+                        if "afiliado_id" in flt:
+                            cass_flt_op["afiliado_id"] = flt["afiliado_id"]
+                        elif "numero_afiliado" in flt:
+                            parts = flt["numero_afiliado"].split("-")
+                            if len(parts) == 3 and parts[0] == "AF":
+                                cass_flt_op["afiliado_id"] = f"AF-{int(parts[2]):06d}"
+                            else:
+                                cass_flt_op["numero_afiliado"] = flt["numero_afiliado"]
+                    elif req.model == "Medicamento":
+                        cass_flt_op = {k: v for k, v in flt.items() if k == "medicamento_id"}
+                    else:
+                        cass_flt_op = flt
+                    col.update_many(cass_flt_op, {"$set": data})
                     sets  = ", ".join([f"{k} = '{v}'" for k, v in data.items()])
-                    where_parts = []
-                    for k, v in flt.items():
-                        where_parts.append(f"{k} = '{v}'")
+                    where_parts = [f"{k} = '{v}'" for k, v in cass_flt_op.items()]
                     where = " AND ".join(where_parts) if where_parts else "1=1"
                     cql = f"UPDATE prepaga.{cass_col} SET {sets} WHERE {where};"
                     results["cassandra"] = ok({"updated": True}, cql)
 
                 elif op == "delete":
-                    col.delete_many(flt)
-                    where_parts = [f"{k} = '{v}'" for k, v in flt.items()]
+                    if req.model == "Afiliado":
+                        cass_flt_op = {}
+                        if "afiliado_id" in flt:
+                            cass_flt_op["afiliado_id"] = flt["afiliado_id"]
+                        elif "numero_afiliado" in flt:
+                            parts = flt["numero_afiliado"].split("-")
+                            if len(parts) == 3 and parts[0] == "AF":
+                                cass_flt_op["afiliado_id"] = f"AF-{int(parts[2]):06d}"
+                            else:
+                                cass_flt_op["numero_afiliado"] = flt["numero_afiliado"]
+                    elif req.model == "Medicamento":
+                        cass_flt_op = {k: v for k, v in flt.items() if k == "medicamento_id"}
+                    else:
+                        cass_flt_op = flt
+                    col.delete_many(cass_flt_op)
+                    where_parts = [f"{k} = '{v}'" for k, v in cass_flt_op.items()]
                     where = " AND ".join(where_parts) if where_parts else "1=1"
                     cql = f"DELETE FROM prepaga.{cass_col} WHERE {where};"
                     results["cassandra"] = ok({"deleted": True}, cql)

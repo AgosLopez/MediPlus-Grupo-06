@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import GraphView from './GraphView'
 import { IconTerminal } from './Icons'
 
@@ -21,25 +22,81 @@ function StatusBadge({ status }) {
   return <span className={`badge ${s.cls}`}>{s.label}</span>
 }
 
+/* ── Enfermedad modal ────────────────────────────────────────────────── */
+function EnfermedadModal({ item, onClose }) {
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-box" onClick={e => e.stopPropagation()}>
+        <div className="modal-header">
+          <span className="modal-title">{item.nombre || 'Detalle'}</span>
+          <button className="modal-close" onClick={onClose}>✕ Cerrar</button>
+        </div>
+        <div className="modal-body">
+          {Object.entries(item).map(([k, v]) => (
+            <div key={k} className="modal-row">
+              <span className="modal-key">{k}</span>
+              <span className="modal-val">
+                {v === null || v === undefined
+                  ? <span className="db-card-muted">—</span>
+                  : typeof v === 'object'
+                    ? <span className="db-card-nested">{JSON.stringify(v)}</span>
+                    : String(v)}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 /* ── MongoDB ─────────────────────────────────────────────────────────── */
 function MongoCard({ doc }) {
+  const [modalItem, setModalItem] = useState(null)
+
   return (
-    <div className="db-card mongo-card">
-      {Object.entries(doc).map(([k, v]) => {
-        const isObj = typeof v === 'object' && v !== null && !Array.isArray(v)
-        const isArr = Array.isArray(v)
-        return (
-          <div key={k} className="db-card-row">
-            <span className="db-card-key">{k}</span>
-            <span className="db-card-val">
-              {isObj  ? <span className="db-card-nested">{JSON.stringify(v)}</span>
-             : isArr  ? <span className="db-card-muted">[{v.length} items]</span>
-             : String(v)}
-            </span>
-          </div>
-        )
-      })}
-    </div>
+    <>
+      <div className="db-card mongo-card">
+        {Object.entries(doc).map(([k, v]) => {
+          const isObj = typeof v === 'object' && v !== null && !Array.isArray(v)
+          const isArr = Array.isArray(v)
+          return (
+            <div key={k} className="db-card-row">
+              <span className="db-card-key">{k}</span>
+              <span className="db-card-val">
+                {isObj ? <span className="db-card-nested">{JSON.stringify(v)}</span>
+               : isArr ? (
+                  v.length === 0
+                    ? <span className="db-card-muted">[ vacío ]</span>
+                    : <span className="db-card-tags">
+                        {v.map((item, i) => {
+                          const isItemObj = typeof item === 'object' && item !== null
+                          const label = isItemObj
+                            ? (item.nombre || item.name || `Item ${i + 1}`)
+                            : String(item)
+                          return (
+                            <span key={i} className="db-card-tag-row">
+                              <span className="db-card-tag">{label}</span>
+                              {isItemObj && (
+                                <button
+                                  className="db-card-tag-btn"
+                                  onClick={() => setModalItem(item)}
+                                  title="Ver detalle"
+                                >+</button>
+                              )}
+                            </span>
+                          )
+                        })}
+                      </span>
+                )
+               : String(v)}
+              </span>
+            </div>
+          )
+        })}
+      </div>
+      {modalItem && <EnfermedadModal item={modalItem} onClose={() => setModalItem(null)} />}
+    </>
   )
 }
 
