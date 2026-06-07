@@ -13,12 +13,10 @@ user     = os.getenv("NEO4J_USER")
 password = os.getenv("NEO4J_PASSWORD")
 database = os.getenv("NEO4J_DATABASE")
 
-# ── NEO4J ─────────────────────────────────────────────────────────────────────
 print("=" * 55)
 print("NEO4J")
 print("=" * 55)
 
-# Intenta varias combinaciones de usuario
 candidatos = [
     (user,        password),
     ("neo4j",     password),
@@ -41,7 +39,6 @@ for u, p in candidatos:
         short = str(e).split("{message:")[1].split("}")[0].strip() if "{message:" in str(e) else str(e)[:80]
         print(f"  FALLO      user='{u}' -> {short}")
 
-# ── MONGODB ───────────────────────────────────────────────────────────────────
 print()
 print("=" * 55)
 print("MONGODB")
@@ -56,7 +53,6 @@ try:
 except Exception as e:
     print(f"  FALLO → {e}")
 
-# ── REDIS ─────────────────────────────────────────────────────────────────────
 print()
 print("=" * 55)
 print("REDIS")
@@ -77,7 +73,6 @@ try:
 except Exception as e:
     print(f"  FALLO → {e}")
 
-# ── ASTRA / CASSANDRA ─────────────────────────────────────────────────────────
 print()
 print("=" * 55)
 print("ASTRA (Cassandra)")

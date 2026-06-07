@@ -35,7 +35,6 @@ function runForce(nodes, relationships, W, H) {
   })
 
   for (let iter = 0; iter < 280; iter++) {
-    // Repulsión entre nodos
     for (let a = 0; a < nodes.length; a++) {
       for (let b = a + 1; b < nodes.length; b++) {
         const pa = pos[nodes[a].id], pb = pos[nodes[b].id]
@@ -45,13 +44,11 @@ function runForce(nodes, relationships, W, H) {
         pa.vx += (f * dx) / d;  pb.vx -= (f * dx) / d
         pa.vy += (f * dy) / d;  pb.vy -= (f * dy) / d
       }
-      // Atracción al centro
       const p = pos[nodes[a].id]
       p.vx += (W / 2 - p.x) * 0.008
       p.vy += (H / 2 - p.y) * 0.008
     }
 
-    // Resorte por relaciones
     relationships.forEach(rel => {
       const s = pos[rel.source], t = pos[rel.target]
       if (!s || !t) return
@@ -62,7 +59,6 @@ function runForce(nodes, relationships, W, H) {
       s.vy += (f * dy) / d;  t.vy -= (f * dy) / d
     })
 
-    // Aplicar velocidad con amortiguación
     nodes.forEach(n => {
       const p = pos[n.id]
       p.x += p.vx * 0.18;  p.y += p.vy * 0.18
@@ -97,14 +93,12 @@ export default function GraphView({ nodes, relationships }) {
           </marker>
         </defs>
 
-        {/* Aristas */}
         {relationships.map((rel, i) => {
           const s = pos[rel.source], t = pos[rel.target]
           if (!s || !t) return null
           const mx = (s.x + t.x) / 2, my = (s.y + t.y) / 2
           const dx = t.x - s.x,       dy = t.y - s.y
           const d  = Math.sqrt(dx * dx + dy * dy) || 1
-          // Acortar línea para no solaparse con el nodo
           const R  = 24
           const x1 = s.x + (dx / d) * R, y1 = s.y + (dy / d) * R
           const x2 = t.x - (dx / d) * R, y2 = t.y - (dy / d) * R
@@ -128,7 +122,6 @@ export default function GraphView({ nodes, relationships }) {
           )
         })}
 
-        {/* Nodos */}
         {nodes.map(n => {
           const p = pos[n.id]
           if (!p) return null
@@ -151,7 +144,6 @@ export default function GraphView({ nodes, relationships }) {
                 strokeWidth={isHov ? 2.5 : 1.5}
                 style={{ transition: 'r 0.15s, fill-opacity 0.15s' }}
               />
-              {/* Tipo (etiqueta Neo4j) */}
               <text
                 x={p.x} y={p.y - 2}
                 fill="white"
@@ -163,7 +155,6 @@ export default function GraphView({ nodes, relationships }) {
               >
                 {n.label.toUpperCase()}
               </text>
-              {/* Nombre / id debajo */}
               <text
                 x={p.x} y={p.y + 35}
                 fill="#adbac7"
@@ -174,7 +165,6 @@ export default function GraphView({ nodes, relationships }) {
                 {display}
               </text>
 
-              {/* Tooltip al hover */}
               {isHov && (
                 <foreignObject
                   x={p.x + 28} y={p.y - 40}
@@ -199,7 +189,6 @@ export default function GraphView({ nodes, relationships }) {
         })}
       </svg>
 
-      {/* Leyenda */}
       <div className="graph-legend">
         {[...new Set(nodes.map(n => n.label))].map(lbl => (
           <span key={lbl} className="graph-legend-item">

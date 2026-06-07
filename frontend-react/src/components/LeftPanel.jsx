@@ -64,7 +64,6 @@ export default function LeftPanel({ onResults, setLoading }) {
   return (
     <aside className="left-panel">
 
-      {/* Operación */}
       <div className="lp-section">
         <p className="lp-label">Operación</p>
         <div className="op-grid">
@@ -82,7 +81,6 @@ export default function LeftPanel({ onResults, setLoading }) {
         </div>
       </div>
 
-      {/* Modelo */}
       <div className="lp-section">
         <p className="lp-label">Modelo</p>
         <div className="model-tabs">
@@ -99,7 +97,6 @@ export default function LeftPanel({ onResults, setLoading }) {
         </div>
       </div>
 
-      {/* Formulario */}
       <form className="lp-form" onSubmit={handleSubmit}>
 
         {showFilter && (

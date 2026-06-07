@@ -29,16 +29,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ── Conexiones ────────────────────────────────────────────────────────────────
-
-
-
 
 def get_db():
     return get_astra()
 
 def format_docs(cursor):
-    """Función auxiliar para convertir el cursor a lista y limpiar el _id"""
     datos = list(cursor)
     for d in datos:
         d.pop("_id", None)
@@ -92,7 +87,6 @@ def get_astra():
     except Exception:
         return None
 
-# ── Esquemas de modelos ───────────────────────────────────────────────────────
 
 _ZONAS   = ["CABA", "GBA Norte", "GBA Sur", "GBA Oeste", "Interior"]
 _PLANES  = ["BASICO", "PLATA", "ORO", "FAMILIAR", "PLATINO"]
@@ -101,12 +95,10 @@ _SANGRE  = ["A+","A-","B+","B-","AB+","AB-","O+","O-"]
 
 MODELS = {
     "Afiliado": {
-        # Campos para búsqueda / filtro (READ, UPDATE filter, DELETE)
         "fields_filter": [
             {"name": "numero_afiliado", "type": "text", "required": False},
             {"name": "dni",             "type": "text", "required": False},
         ],
-        # Campos para inserción / actualización de datos (CREATE, UPDATE data)
         "fields_create": [
             {"name": "nombre",           "type": "text",   "required": True},
             {"name": "apellido",         "type": "text",   "required": True},
@@ -144,7 +136,6 @@ MODELS = {
             {"name": "especialidad", "type": "text", "required": False},
         ],
         "neo4j_label":          "Medico",
-        # medico_id:ID is the actual Neo4j property name (CSV import artifact)
         "neo4j_prop_map":       {"medico_id": "`medico_id:ID`"},
         "mongo_collection":     None,
         "cassandra_collection": None,
@@ -186,7 +177,6 @@ MODELS = {
     },
 }
 
-# Queries de grafo para Neo4j READ — retornan nodos + relaciones
 GRAPH_QUERIES = {
     "Afiliado": {
         "alias":    "a",
@@ -231,7 +221,6 @@ GRAPH_QUERIES = {
     },
 }
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
 
 def ok(data, query):
     return {"status": "ok", "data": data, "query": query, "error": None}
@@ -287,13 +276,6 @@ def neo4j_to_graph(records, node_keys, rel_keys):
     return {"nodes": list(nodes_map.values()), "relationships": rels}
 
 def _next_afiliado_id(db):
-    """Genera el proximo afiliado_id usando un contador atomico en MongoDB.
-
-    Usa find_one_and_update + $inc, que MongoDB ejecuta atomicamente,
-    eliminando la race condition del count_documents() + 1 anterior.
-    $setOnInsert inicializa el contador al conteo actual solo en la primera
-    llamada (upsert), preservando los IDs ya existentes.
-    """
     db["counters"].update_one(
         {"_id": "afiliado_seq"},
         {"$setOnInsert": {"seq": db["afiliados"].count_documents({})}},
@@ -308,7 +290,6 @@ def _next_afiliado_id(db):
     return f"AF-{num:06d}", f"AF-2024-{num:07d}"
 
 def _mongo_afiliado_filter(flt):
-    """Mapea campos planos del formulario a las rutas reales de MongoDB."""
     if "afiliado_id"     in flt: return {"_id":            flt["afiliado_id"]}
     if "numero_afiliado" in flt: return {"numero_afiliado": flt["numero_afiliado"]}
     if "dni"             in flt: return {"dni":             flt["dni"]}
@@ -325,7 +306,6 @@ def _mongo_afiliado_filter(flt):
     return mongo_flt
 
 def _mongo_afiliado_set(data):
-    """Mapea campos planos a rutas correctas para $set."""
     _addr = {"calle", "numero", "ciudad", "provincia", "codigo_postal", "zona"}
     set_doc = {}
     for k, v in data.items():
@@ -338,7 +318,6 @@ def _mongo_afiliado_set(data):
     return set_doc
 
 def _build_afiliado_mongo_doc(afiliado_id, numero_afiliado, data):
-    """Convierte los campos planos del formulario al documento MongoDB real."""
     hoy = str(date.today())
     plan_cod = data.get("plan_salud", "BASICO")
     planes = {
@@ -383,7 +362,6 @@ def _build_afiliado_mongo_doc(afiliado_id, numero_afiliado, data):
         "activo":        True,
     }
 
-# ── Endpoints ─────────────────────────────────────────────────────────────────
 
 @app.get("/api/health")
 async def health():
@@ -537,7 +515,6 @@ def _execute_operation_inner(req: OperationRequest):
         raise HTTPException(status_code=400, detail=f"Modelo {req.model} no existe")
 
     schema  = MODELS[req.model]
-    # Strip empty strings and None values so they don't pollute WHERE clauses or $set
     data    = {k: v for k, v in (req.data   or {}).items() if v is not None and v != ""}
     flt     = {k: v for k, v in (req.filter or {}).items() if v is not None and v != ""}
     op      = req.operation
@@ -551,9 +528,6 @@ def _execute_operation_inner(req: OperationRequest):
         e = err(ValueError("Se requieren datos nuevos para actualizar"))
         return {"neo4j": e, "mongodb": e, "redis": e, "cassandra": e}
 
-    # ── Generar IDs para Afiliado en CREATE ───────────────────────────────────
-    # Se resuelve antes de tocar cualquier DB para que todos los motores
-    # reciban el mismo afiliado_id y numero_afiliado.
     afiliado_id     = None
     numero_afiliado = None
     if req.model == "Afiliado" and op == "create":
@@ -562,15 +536,11 @@ def _execute_operation_inner(req: OperationRequest):
             afiliado_id, numero_afiliado = _next_afiliado_id(mongo_db_tmp)
             mongo_client_tmp.close()
         else:
-            # Fallback si Mongo no está disponible
             import random
             n = random.randint(10000, 99999)
             afiliado_id     = f"AF-{n:06d}"
             numero_afiliado = f"AF-2024-{n:07d}"
 
-    # ── Enriquecimiento DNI → numero_afiliado para Neo4j ─────────────────────
-    # Neo4j no almacena DNI; si el filtro es solo DNI se consulta MongoDB
-    # primero para obtener el numero_afiliado y usarlo en el grafo.
     neo4j_flt = flt
     if req.model == "Afiliado" and op == "read" and "dni" in flt and "numero_afiliado" not in flt:
         _mdb, _mcli = get_mongo()
@@ -584,7 +554,6 @@ def _execute_operation_inner(req: OperationRequest):
             finally:
                 _mcli.close()
 
-    # ── Neo4j ────────────────────────────────────────────────────────────────
     driver = get_neo4j()
     if driver:
         try:
@@ -598,7 +567,6 @@ def _execute_operation_inner(req: OperationRequest):
                         parts = []
                         for k in neo4j_flt:
                             if k in prop_map:
-                                # Match both imported (:ID) and created (plain) property names
                                 parts.append(f"({alias}.{prop_map[k]} = ${k} OR {alias}.{k} = ${k})")
                             else:
                                 parts.append(f"{alias}.{k} = ${k}")
@@ -676,7 +644,6 @@ def _execute_operation_inner(req: OperationRequest):
     else:
         results["neo4j"] = unavailable()
 
-    # ── MongoDB ───────────────────────────────────────────────────────────────
     col_name = schema.get("mongo_collection")
     if col_name:
         mongo_db, mongo_client = get_mongo()
@@ -692,7 +659,7 @@ def _execute_operation_inner(req: OperationRequest):
                 elif op == "create":
                     doc = _build_afiliado_mongo_doc(afiliado_id, numero_afiliado, data)
                     col.insert_one(doc)
-                    doc.pop("_id", None)   # _id no es JSON-serializable directo
+                    doc.pop("_id", None)
                     doc["_id"] = afiliado_id
                     query = f'db.{col_name}.insertOne({{ _id: "{afiliado_id}", numero_afiliado: "{numero_afiliado}", ... }})'
                     results["mongodb"] = ok(doc, query)
@@ -719,7 +686,6 @@ def _execute_operation_inner(req: OperationRequest):
     else:
         results["mongodb"] = not_applicable(f"{req.model} no tiene coleccion en MongoDB")
 
-    # ── Redis ─────────────────────────────────────────────────────────────────
     r = get_redis()
     if r:
         try:
@@ -728,14 +694,11 @@ def _execute_operation_inner(req: OperationRequest):
 
             if op == "read":
                 if req.model == "Afiliado":
-                    # Buscar sesiones activas del afiliado + rate limiting
                     id_val       = flt.get("numero_afiliado") or flt.get("dni") or "*"
                     result_data  = {}
-                    # Cache propio del afiliado
                     cache_keys   = r.keys(f"mediplus:afiliado:{id_val}")
                     for k in cache_keys[:5]:
                         result_data[k] = r.hgetall(k)
-                    # Rate limiting de credencial
                     rate_key     = f"rate:credencial:{id_val}"
                     rate_val     = r.get(rate_key)
                     if rate_val:
@@ -747,7 +710,6 @@ def _execute_operation_inner(req: OperationRequest):
                     results["redis"] = ok(result_data, query)
 
                 elif req.model == "Medico":
-                    # Mostrar ranking real de medicos mas demandados
                     top   = r.zrevrange("top:medicos_demandados", 0, 9, withscores=True)
                     query = "ZREVRANGE top:medicos_demandados 0 9 WITHSCORES"
                     results["redis"] = ok(
@@ -805,7 +767,6 @@ def _execute_operation_inner(req: OperationRequest):
                 elif req.model == "Medico":
                     r.hset(key, mapping=flat)
                     query = f"HSET {key} ...\nZADD top:medicos_demandados NX 0 {med_id}"
-
                 else:
                     r.hset(key, mapping=flat)
                     r.expire(key, 86400)
@@ -839,7 +800,6 @@ def _execute_operation_inner(req: OperationRequest):
     else:
         results["redis"] = unavailable()
 
-    # ── Cassandra (via AstraDB) ───────────────────────────────────────────────
     cass_col = schema.get("cassandra_collection")
     if cass_col:
         adb = get_astra()
@@ -848,19 +808,16 @@ def _execute_operation_inner(req: OperationRequest):
                 col = adb.get_collection(cass_col)
 
                 if op == "read":
-                    # Construir filtro real para las partition keys de Cassandra
                     cass_flt = {}
                     if req.model == "Afiliado":
                         if "afiliado_id" in flt:
                             cass_flt["afiliado_id"] = flt["afiliado_id"]
                         elif "numero_afiliado" in flt:
-                            # numero_afiliado="AF-2024-0000006" → afiliado_id="AF-000006"
                             parts = flt["numero_afiliado"].split("-")
                             if len(parts) == 3 and parts[0] == "AF":
                                 cass_flt["afiliado_id"] = f"AF-{int(parts[2]):06d}"
                             else:
                                 cass_flt["numero_afiliado"] = flt["numero_afiliado"]
-                        # tabla: eventos_por_afiliado PK=(afiliado_id, fecha_evento, evento_id)
                         where_clause = " AND ".join(f"{k} = '{v}'" for k, v in cass_flt.items())
                         cql = (
                             f"SELECT * FROM prepaga.prestaciones_por_afiliado"
@@ -870,7 +827,6 @@ def _execute_operation_inner(req: OperationRequest):
                     elif req.model == "Medicamento":
                         if "medicamento_id" in flt:
                             cass_flt["medicamento_id"] = flt["medicamento_id"]
-                        # tabla: uso_medicamento_mes PK=((medicamento_id, anio_mes), fecha_evento, evento_id)
                         cql = (
                             f"SELECT * FROM prepaga.uso_medicamentos_mes"
                             + (f" WHERE medicamento_id = '{cass_flt.get('medicamento_id', '?')}'" if cass_flt else "")

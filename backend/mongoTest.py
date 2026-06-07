@@ -5,7 +5,6 @@ from pprint import pprint
 
 load_dotenv()
 
-# Variable global para configurar el límite de registros en las pruebas
 LIMIT_TEST = 3
 
 try:

@@ -22,7 +22,6 @@ function StatusBadge({ status }) {
   return <span className={`badge ${s.cls}`}>{s.label}</span>
 }
 
-/* ── Enfermedad modal ────────────────────────────────────────────────── */
 function EnfermedadModal({ item, onClose }) {
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -50,7 +49,6 @@ function EnfermedadModal({ item, onClose }) {
   )
 }
 
-/* ── MongoDB ─────────────────────────────────────────────────────────── */
 function MongoCard({ doc }) {
   const [modalItem, setModalItem] = useState(null)
 
@@ -110,7 +108,6 @@ function MongoResult({ data }) {
   return <MongoCard doc={data} />
 }
 
-/* ── Redis ───────────────────────────────────────────────────────────── */
 function RedisResult({ data }) {
   if (!data) return null
   if (Array.isArray(data)) {
@@ -160,7 +157,6 @@ function RedisResult({ data }) {
   return <pre className="code-block data-block">{JSON.stringify(data, null, 2)}</pre>
 }
 
-/* ── Cassandra ────────────────────────────────────────────────────────── */
 function CassandraResult({ data }) {
   if (!data) return null
   if (Array.isArray(data)) {
@@ -193,7 +189,6 @@ function CassandraResult({ data }) {
   return <pre className="code-block data-block">{JSON.stringify(data, null, 2)}</pre>
 }
 
-/* ── Shared mutation result ───────────────────────────────────────────── */
 function MutationResult({ data }) {
   return (
     <div className="db-mutation-result">
@@ -207,7 +202,6 @@ function MutationResult({ data }) {
   )
 }
 
-/* ── Result block ─────────────────────────────────────────────────────── */
 function ResultBlock({ engine, result }) {
   if (!result) return (
     <div className="result-empty">
@@ -272,7 +266,6 @@ function ResultBlock({ engine, result }) {
   )
 }
 
-/* ── Panel ────────────────────────────────────────────────────────────── */
 export default function ResultsPanel({ results, activeTab, setActiveTab, loading }) {
   return (
     <main className="results-panel">
