@@ -15,9 +15,9 @@ try:
 
     r.set("test", "hola")
 
-    print("✅ Redis conectado")
+    print("OK Redis conectado")
     print(r.get("test"))
 
 except Exception as e:
-    print("❌ Error")
+    print("ERROR")
     print(e)

@@ -12,9 +12,9 @@ try:
         token=os.getenv("ASTRA_DB_APPLICATION_TOKEN")
     )
 
-    print("✅ Cassandra conectada")
+    print("OK Cassandra conectada")
     print(db.list_collection_names())
 
 except Exception as e:
-    print("❌ Error")
+    print("ERROR")
     print(e)
