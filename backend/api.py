@@ -10,7 +10,11 @@ from astrapy import DataAPIClient
 import os
 import json
 import uuid
+import certifi
+
+os.environ["SSL_CERT_FILE"] = certifi.where()
 from datetime import date
+
 
 load_dotenv()
 
